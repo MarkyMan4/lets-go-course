@@ -7,6 +7,10 @@ import (
 	"os"
 )
 
+type application struct {
+	logger *slog.Logger
+}
+
 func main() {
 	// command line flag -addr for address, defaults to :4000
 	// e.g. go run ./cmd/web/ -addr=":8000"
@@ -15,15 +19,18 @@ func main() {
 	flag.Parse()
 
 	logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
+	app := &application{
+		logger: logger,
+	}
 
 	mux := http.NewServeMux()
 
 	fileServer := http.FileServer(http.Dir("./ui/static/"))
 	mux.Handle("/static/", http.StripPrefix("/static", fileServer))
 
-	mux.HandleFunc("/", home)
-	mux.HandleFunc("/snippet/view/", snippetView)
-	mux.HandleFunc("/snippet/create", snippetCreate)
+	mux.HandleFunc("/", app.home)
+	mux.HandleFunc("/snippet/view/", app.snippetView)
+	mux.HandleFunc("/snippet/create", app.snippetCreate)
 
 	logger.Info("starting server", "addr", *addr)
 
